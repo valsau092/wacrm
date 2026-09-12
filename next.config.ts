@@ -85,6 +85,8 @@ const nextConfig: NextConfig = {
    * has no effect on a production build.
    */
   allowedDevOrigins: [
+    "76.13.236.79",
+    "crm.vasamkt.com",
     "*.ngrok-free.app",
     "*.ngrok.app",
     "*.ngrok.io",
