@@ -7,6 +7,12 @@ import {
   verifyPhoneNumber,
 } from '@/lib/whatsapp/meta-api'
 import { encrypt, decrypt } from '@/lib/whatsapp/encryption'
+import {
+  requireRole,
+  toErrorResponse,
+  UnauthorizedError,
+  ForbiddenError,
+} from '@/lib/auth/account'
 
 /**
  * Resolve the caller's account_id from their profile. Inlined here
@@ -48,11 +54,13 @@ function supabaseAdmin() {
 }
 
 /**
- * GET /api/whatsapp/config
+ * GET /api/whatsapp/config  (admin+)
  *
  * Used by the "Test API Connection" button and by the page to check
- * whether the saved config is healthy. Returns 200 in all non-auth cases
- * so the UI can render an appropriate message rather than show a 500.
+ * whether the saved config is healthy. Returns 200 for every
+ * non-auth/non-role failure mode so the UI can render an appropriate
+ * message rather than show a 500; 401/403 still short-circuit via
+ * requireRole() for callers with no session or below admin.
  *
  * Response shape:
  *   { connected: true,  phone_info: {...} }
@@ -62,28 +70,11 @@ function supabaseAdmin() {
  */
 export async function GET() {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const accountId = await resolveAccountId(supabase, user.id)
-    if (!accountId) {
-      return NextResponse.json(
-        {
-          connected: false,
-          reason: 'no_account',
-          message: 'Your profile is not linked to an account.',
-        },
-        { status: 200 },
-      )
-    }
+    // Same admin-only gate as the rest of Settings (issue: reads of
+    // connection metadata — phone_number_id, waba_id, registration
+    // status — were open to every account member, not just admin+.
+    // Writes were already blocked by RLS; this closes the read side).
+    const { supabase, accountId } = await requireRole('admin')
 
     const { data: config, error: configError } = await supabase
       .from('whatsapp_config')
@@ -149,6 +140,9 @@ export async function GET() {
       )
     }
   } catch (error) {
+    if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+      return toErrorResponse(error)
+    }
     console.error('Error in WhatsApp config GET:', error)
     return NextResponse.json(
       { connected: false, reason: 'unknown', message: 'Internal server error' },
