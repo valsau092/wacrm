@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  getCurrentAccount,
-  requireRole,
-  toErrorResponse,
-} from '@/lib/auth/account'
+import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { loadEmbeddingsKey } from '@/lib/ai/config'
 import { ingestDocument } from '@/lib/ai/knowledge'
@@ -12,11 +8,13 @@ import { AiError } from '@/lib/ai/types'
 /**
  * GET /api/ai/knowledge
  *
- * List the account's knowledge-base documents (any member).
+ * List the account's knowledge-base documents (agent+ — mirrors the
+ * gate on GET /api/ai/config; a viewer has no operational reason to
+ * read this either).
  */
 export async function GET() {
   try {
-    const { supabase, accountId } = await getCurrentAccount()
+    const { supabase, accountId } = await requireRole('agent')
     const { data, error } = await supabase
       .from('ai_knowledge_documents')
       .select('id, title, updated_at')

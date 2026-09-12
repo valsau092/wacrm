@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  getCurrentAccount,
-  requireRole,
-  toErrorResponse,
-} from '@/lib/auth/account'
+import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
 import { loadEmbeddingsKey } from '@/lib/ai/config'
 import { ingestDocument } from '@/lib/ai/knowledge'
@@ -12,11 +8,12 @@ import { AiError } from '@/lib/ai/types'
 type Params = { params: Promise<{ id: string }> }
 
 /**
- * GET /api/ai/knowledge/[id] — full document (any member).
+ * GET /api/ai/knowledge/[id] — full document (agent+, same gate as
+ * GET /api/ai/knowledge and GET /api/ai/config).
  */
 export async function GET(_request: Request, { params }: Params) {
   try {
-    const { supabase, accountId } = await getCurrentAccount()
+    const { supabase, accountId } = await requireRole('agent')
     const { id } = await params
     const { data, error } = await supabase
       .from('ai_knowledge_documents')

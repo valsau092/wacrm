@@ -5,8 +5,8 @@ scripts and automations — send messages, manage contacts, launch
 broadcasts — without going through the dashboard UI.
 
 > **Status:** stable. Authentication, scopes, rate limiting, the
-> messages / contacts / conversations / broadcasts endpoints, and
-> outbound event [webhooks](#webhooks) all ship now.
+> messages / contacts / conversations / broadcasts / AI config
+> endpoints, and outbound event [webhooks](#webhooks) all ship now.
 
 ## Authentication
 
@@ -50,6 +50,7 @@ it. Grant the minimum.
 | `conversations:read` | List and read conversations              |
 | `broadcasts:send`    | Launch broadcast campaigns               |
 | `webhooks:manage`    | Register and manage outbound webhooks    |
+| `ai_config:read`     | Read the AI assistant config + knowledge base |
 
 A key with **no scopes** still authenticates and can call
 `GET /api/v1/me` — useful for verifying a key works.
@@ -263,6 +264,41 @@ Broadcast status + counts. Scope: `broadcasts:send`. `status` moves
 `sending` → `sent`; `delivered_count` / `read_count` keep climbing as
 Meta delivery webhooks arrive. `404` for another account's broadcast.
 
+### `GET /api/v1/ai-config`
+
+Read the AI assistant's behaviour settings and knowledge base. Scope:
+`ai_config:read`. Meant for automations (e.g. an n8n workflow) that
+need to know how the assistant is configured — it never returns the
+provider, model, or either API key; those are credentials, not
+behaviour, and stay out of the public API.
+
+```bash
+curl https://your-crm.example.com/api/v1/ai-config \
+  -H "Authorization: Bearer wacrm_live_xxx"
+```
+
+```json
+{
+  "data": {
+    "configured": true,
+    "assistant_enabled": true,
+    "auto_reply_enabled": true,
+    "auto_reply_max_per_conversation": 3,
+    "handoff_agent_id": null,
+    "business_context": "We are Acme, a coffee-equipment store...",
+    "knowledge_base": [
+      { "title": "Business hours", "content": "Mon–Fri, 9am–6pm." },
+      { "title": "Returns policy", "content": "30-day returns window." }
+    ]
+  }
+}
+```
+
+If the account has no AI config yet, `configured` is `false` and only
+`knowledge_base` (possibly empty) is included alongside it.
+`handoff_agent_id` is `null` when auto-reply hands off to the shared
+unassigned queue rather than a specific teammate.
+
 ## Pagination
 
 Every list endpoint pages the same way. Request a page size with
@@ -377,7 +413,7 @@ internal targets are refused at delivery time.
 ## Roadmap
 
 The public API now covers messaging, contacts, conversations,
-broadcasts, and outbound webhooks — the full scope of
+broadcasts, AI config, and outbound webhooks — the full scope of
 [#245](https://github.com/ArnasDon/wacrm/issues/245). Future ideas
 (deals/pipelines, templates, flows, a delivery queue for webhooks) are
 not yet scheduled.
