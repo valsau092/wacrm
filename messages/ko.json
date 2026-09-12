@@ -595,7 +595,15 @@
       "toastMoveOrDeleteDeals": "먼저 이 단계의 딜을 이동하거나 삭제하세요",
       "toastFailedDeleteStage": "단계를 삭제하지 못했습니다",
       "toastFailedDeletePipeline": "파이프라인을 삭제하지 못했습니다",
-      "toastDeleted": "파이프라인이 삭제되었습니다"
+      "toastDeleted": "파이프라인이 삭제되었습니다",
+      "markWonStage": "성사",
+      "markLostStage": "실패",
+      "wonStageTooltip": "이 파이프라인의 성사 단계로 지정",
+      "lostStageTooltip": "이 파이프라인의 실패 단계로 지정",
+      "toastStageMarkedWon": "\"{name}\"이(가) 이제 성사 단계입니다",
+      "toastStageMarkedLost": "\"{name}\"이(가) 이제 실패 단계입니다",
+      "toastStageOutcomeCleared": "\"{name}\"의 성사/실패 지정이 해제되었습니다",
+      "toastFailedSetOutcome": "단계를 업데이트하지 못했습니다"
     },
     "analytics": {
       "totalDeals": "전체 딜",

@@ -361,6 +361,8 @@ export interface PipelineStage {
   name: string;
   position: number;
   color: string;
+  is_won_stage: boolean;
+  is_lost_stage: boolean;
   created_at: string;
 }
 

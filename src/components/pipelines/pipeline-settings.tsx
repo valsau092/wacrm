@@ -17,6 +17,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createClient } from "@/lib/supabase/client";
+import { useCan } from "@/hooks/use-can";
+import { GatedButton } from "@/components/ui/gated-button";
+import { cn } from "@/lib/utils";
 import type { Pipeline, PipelineStage } from "@/types";
 import {
   Dialog,
@@ -71,6 +74,7 @@ export function PipelineSettings({
 }: PipelineSettingsProps) {
   const t = useTranslations("Pipelines.settings");
   const supabase = createClient();
+  const canEditSettings = useCan("edit-settings");
 
   const [name, setName] = useState(pipeline.name);
   const [localStages, setLocalStages] = useState<PipelineStage[]>(stages);
@@ -182,6 +186,60 @@ export function PipelineSettings({
     setLocalStages(localStages.filter((s) => s.id !== stageId));
   }
 
+  // Swap the won/lost flag between stages via the set_pipeline_stage_outcome
+  // RPC (042) — atomic on the DB side (unmark old, mark new, one
+  // transaction), which two sequential .update() calls from here couldn't
+  // guarantee against the partial unique index from 041. Non-admin calls
+  // are a silent no-op: pipeline_stages_modify RLS rejects the UPDATEs
+  // inside the function, same gate as every other write in this dialog.
+  async function handleSetOutcome(
+    stageId: string,
+    outcome: "won" | "lost" | null,
+  ) {
+    const stage = localStages.find((s) => s.id === stageId);
+    if (!stage) return;
+
+    const { error } = await supabase.rpc("set_pipeline_stage_outcome", {
+      p_stage_id: stageId,
+      p_outcome: outcome,
+    });
+    if (error) {
+      toast.error(t("toastFailedSetOutcome"));
+      return;
+    }
+
+    // Mirror exactly what the RPC just did: clear the flag from whichever
+    // stage had it, set it on the target (or clear it there too when
+    // outcome is null).
+    setLocalStages((prev) =>
+      prev.map((s) => {
+        if (s.id === stageId) {
+          return {
+            ...s,
+            is_won_stage: outcome === "won",
+            is_lost_stage: outcome === "lost",
+          };
+        }
+        if (outcome === "won" && s.is_won_stage) {
+          return { ...s, is_won_stage: false };
+        }
+        if (outcome === "lost" && s.is_lost_stage) {
+          return { ...s, is_lost_stage: false };
+        }
+        return s;
+      }),
+    );
+    onStagesChanged();
+
+    if (outcome === "won") {
+      toast.success(t("toastStageMarkedWon", { name: stage.name }));
+    } else if (outcome === "lost") {
+      toast.success(t("toastStageMarkedLost", { name: stage.name }));
+    } else {
+      toast.success(t("toastStageOutcomeCleared", { name: stage.name }));
+    }
+  }
+
   async function handleDeletePipeline() {
     setDeleting(true);
     // ON DELETE CASCADE handles deals + stages.
@@ -275,6 +333,8 @@ export function PipelineSettings({
                             setLocalStages(updated);
                           }}
                           onRemove={() => handleRemoveStage(stage.id)}
+                          onSetOutcome={(outcome) => handleSetOutcome(stage.id, outcome)}
+                          canEditSettings={canEditSettings}
                           colors={STAGE_COLORS}
                           t={t}
                         />
@@ -369,6 +429,8 @@ function SortableStageRow({
   onNameChange,
   onColorChange,
   onRemove,
+  onSetOutcome,
+  canEditSettings,
   colors,
   t,
 }: {
@@ -376,6 +438,8 @@ function SortableStageRow({
   onNameChange: (v: string) => void;
   onColorChange: (v: string) => void;
   onRemove: () => void;
+  onSetOutcome: (outcome: "won" | "lost" | null) => void;
+  canEditSettings: boolean;
   colors: string[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: any;
@@ -410,6 +474,40 @@ function SortableStageRow({
         onChange={(e) => onNameChange(e.target.value)}
         className="h-7 flex-1 border-transparent bg-transparent text-sm text-foreground focus:border-border"
       />
+      <GatedButton
+        type="button"
+        variant="outline"
+        size="xs"
+        canAct={canEditSettings}
+        gateReason="mark this pipeline stage as won"
+        onClick={() => onSetOutcome(stage.is_won_stage ? null : "won")}
+        title={t("wonStageTooltip")}
+        className={cn(
+          "border-border",
+          stage.is_won_stage
+            ? "border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25"
+            : "bg-transparent text-muted-foreground hover:bg-muted",
+        )}
+      >
+        {t("markWonStage")}
+      </GatedButton>
+      <GatedButton
+        type="button"
+        variant="outline"
+        size="xs"
+        canAct={canEditSettings}
+        gateReason="mark this pipeline stage as lost"
+        onClick={() => onSetOutcome(stage.is_lost_stage ? null : "lost")}
+        title={t("lostStageTooltip")}
+        className={cn(
+          "border-border",
+          stage.is_lost_stage
+            ? "border-red-500/50 bg-red-500/15 text-red-400 hover:bg-red-500/25"
+            : "bg-transparent text-muted-foreground hover:bg-muted",
+        )}
+      >
+        {t("markLostStage")}
+      </GatedButton>
       <Button
         variant="ghost"
         size="icon-xs"

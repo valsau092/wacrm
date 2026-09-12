@@ -595,7 +595,15 @@
       "toastMoveOrDeleteDeals": "Move or delete deals in this stage first",
       "toastFailedDeleteStage": "Failed to delete stage",
       "toastFailedDeletePipeline": "Failed to delete pipeline",
-      "toastDeleted": "Pipeline deleted"
+      "toastDeleted": "Pipeline deleted",
+      "markWonStage": "Won",
+      "markLostStage": "Lost",
+      "wonStageTooltip": "Mark as the Won stage for this pipeline",
+      "lostStageTooltip": "Mark as the Lost stage for this pipeline",
+      "toastStageMarkedWon": "\"{name}\" is now the Won stage",
+      "toastStageMarkedLost": "\"{name}\" is now the Lost stage",
+      "toastStageOutcomeCleared": "\"{name}\" is no longer a won/lost stage",
+      "toastFailedSetOutcome": "Failed to update stage"
     },
     "analytics": {
       "totalDeals": "Total Deals",
