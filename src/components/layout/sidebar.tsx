@@ -9,7 +9,6 @@ import { useTotalUnread } from "@/hooks/use-total-unread";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import {
   Bell,
-  Bot,
   Crown,
   GitBranch,
   LayoutDashboard,
@@ -22,11 +21,10 @@ import {
   UserCog,
   Users,
   UsersRound,
-  Workflow,
   X,
   Zap,
 } from "lucide-react";
-import type { AccountRole } from "@/lib/auth/roles";
+import { hasMinRole, type AccountRole } from "@/lib/auth/roles";
 
 // Per-role chip metadata used in the sidebar's account strip + the
 // Members tab roster. Keeping this near both consumers in a single
@@ -87,6 +85,15 @@ interface NavItem {
    * Purely informational — doesn't affect routing or access.
    */
   beta?: boolean;
+  /**
+   * Minimum account_role required to see this item, per hasMinRole()/
+   * roleRank ordering (owner > admin > agent > viewer). Omitted = visible
+   * to the "asesor" group (agent) and up — the lowest role this filter
+   * currently handles. viewer is intentionally out of scope for now: it
+   * falls through the same gate as the item it doesn't meet, so a viewer
+   * account sees an empty sidebar until that role gets its own pass.
+   */
+  minRole?: AccountRole;
 }
 
 const navItems: NavItem[] = [
@@ -95,14 +102,12 @@ const navItems: NavItem[] = [
   { href: "/notifications", labelKey: "notifications", icon: Bell },
   { href: "/contacts", labelKey: "contacts", icon: Users },
   { href: "/pipelines", labelKey: "pipelines", icon: GitBranch },
-  { href: "/broadcasts", labelKey: "broadcasts", icon: Radio },
-  { href: "/automations", labelKey: "automations", icon: Zap },
-  { href: "/flows", labelKey: "flows", icon: Workflow, beta: true },
-  { href: "/agents", labelKey: "aiAgents", icon: Bot },
+  { href: "/broadcasts", labelKey: "broadcasts", icon: Radio, minRole: "admin" },
+  { href: "/automations", labelKey: "automations", icon: Zap, minRole: "admin" },
 ];
 
-const bottomNavItems = [
-  { href: "/settings", labelKey: "settings", icon: Settings },
+const bottomNavItems: NavItem[] = [
+  { href: "/settings", labelKey: "settings", icon: Settings, minRole: "admin" },
 ];
 
 interface SidebarProps {
@@ -119,6 +124,26 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   const { profile, profileLoading, account, accountRole, signOut } = useAuth();
   const totalUnread = useTotalUnread();
   const unreadNotifications = useUnreadNotifications();
+
+  // Gate each item by account_role using the existing hasMinRole/roleRank
+  // ordering — no new predicate, mirrors how canManageMembers etc. already
+  // check role. `accountRole` is null while the profile is still loading,
+  // so both lists are empty until it resolves (matches other loading
+  // guards in this file, e.g. showAccountStrip).
+  const visibleNavItems = accountRole
+    ? navItems.filter((item) => hasMinRole(accountRole, item.minRole ?? "agent"))
+    : [];
+  const visibleBottomNavItems = accountRole
+    ? bottomNavItems.filter((item) => hasMinRole(accountRole, item.minRole ?? "agent"))
+    : [];
+  // Same admin+ gate as the Settings nav item above — the account
+  // dropdown's WhatsApp shortcut is a second door into the same page,
+  // so it needs the same guard or hiding the sidebar link alone would
+  // be pointless. The Profile link stays open to everyone: it edits
+  // the signed-in user's own row, not account-wide config.
+  const canViewWhatsappSettings = accountRole
+    ? hasMinRole(accountRole, "admin")
+    : false;
   // Only surface the account-name strip when it actually carries
   // information. A solo user's personal account is named after them
   // (the 017 signup trigger seeds it from `full_name`), so showing it
@@ -208,7 +233,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         {/* Main navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           <ul className="flex flex-col gap-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -268,29 +293,32 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
             })}
           </ul>
 
-          <div className="my-4 border-t border-border" />
-
-          <ul className="flex flex-col gap-1">
-            {bottomNavItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:py-2",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {t(item.labelKey as string)}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          {visibleBottomNavItems.length > 0 && (
+            <>
+              <div className="my-4 border-t border-border" />
+              <ul className="flex flex-col gap-1">
+                {visibleBottomNavItems.map((item) => {
+                  const isActive = pathname.startsWith(item.href);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:py-2",
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {t(item.labelKey as string)}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
         </nav>
 
         {/* User section */}
@@ -372,18 +400,20 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
                 <User className="size-4" />
                 {t("menuProfile")}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                render={
-                  <Link
-                    href="/settings?tab=whatsapp"
-                    onClick={onClose}
-                    className="text-popover-foreground focus:bg-accent focus:text-accent-foreground"
-                  />
-                }
-              >
-                <Settings className="size-4" />
-                {t("menuSettings")}
-              </DropdownMenuItem>
+              {canViewWhatsappSettings && (
+                <DropdownMenuItem
+                  render={
+                    <Link
+                      href="/settings?tab=whatsapp"
+                      onClick={onClose}
+                      className="text-popover-foreground focus:bg-accent focus:text-accent-foreground"
+                    />
+                  }
+                >
+                  <Settings className="size-4" />
+                  {t("menuSettings")}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuItem
                 onClick={signOut}
