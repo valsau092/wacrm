@@ -69,9 +69,9 @@ export interface ThemeMeta {
 export const THEMES: ReadonlyArray<ThemeMeta> = [
   {
     id: "violet",
-    name: "Violet",
-    tagline: "The default — confident, slightly playful.",
-    swatch: "oklch(0.526 0.247 293)",
+    name: "Navy",
+    tagline: "VASA MKT brand — navy primary, teal accent.",
+    swatch: "#213c66",
   },
   {
     id: "emerald",
