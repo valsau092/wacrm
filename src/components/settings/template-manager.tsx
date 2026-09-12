@@ -834,7 +834,17 @@ export function TemplateManager() {
                     </div>
                   )}
                   <Input
-                    placeholder={t('mediaUrlPlaceholder', { format: form.header_format })}
+                    placeholder={t('mediaUrlPlaceholder', {
+                      // `header_format` is the raw code value ('image'/'video'/
+                      // 'document') — map it to the translated word before
+                      // interpolating, same fix as ModeToggle.
+                      format:
+                        form.header_format === 'video'
+                          ? t('formatVideo')
+                          : form.header_format === 'document'
+                            ? t('formatDocument')
+                            : t('formatImage'),
+                    })}
                     value={form.header_media_url}
                     onChange={(e) =>
                       setForm({ ...form, header_media_url: e.target.value })

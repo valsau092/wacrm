@@ -315,7 +315,7 @@ function AutomationCard({
                 meta.pillClass,
               )}
             >
-              {meta.label}
+              {meta.labelKey ? t(meta.labelKey) : meta.fallbackLabel}
             </span>
             <span className="tabular-nums">
               {automation.execution_count === 1
@@ -323,7 +323,7 @@ function AutomationCard({
                 : t("runsPlural", { count: automation.execution_count })}
             </span>
             <span aria-hidden>·</span>
-            <span>{t("lastRun", { time: formatRelative(automation.last_executed_at) })}</span>
+            <span>{t("lastRun", { time: formatRelative(automation.last_executed_at, t) })}</span>
           </div>
         </button>
 

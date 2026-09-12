@@ -149,7 +149,13 @@ export function SettingsOverview({
   const currencyLabel =
     CURRENCIES.find((c) => c.code === defaultCurrency)?.label ?? defaultCurrency;
   const themeName = THEMES.find((t) => t.id === theme)?.name ?? theme;
-  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  // `mode` is the raw code value ("light"/"dark") — map it to the
+  // translated word before interpolating, same fix as ModeToggle
+  // (mode-toggle.tsx), so the subtitle doesn't mix an English word
+  // into an otherwise-localized sentence. `themeName` is still raw
+  // English (Navy/Emerald/Cobalt/Amber/Rose from src/lib/themes.ts) —
+  // that data file has no i18n hook yet, left as a known gap.
+  const modeLabel = mode === 'dark' ? t('modeDark') : t('modeLight');
 
   // Per-tile loading + subtitle. `null` counts render as a graceful
   // fallback so a single failed query never blanks a tile.
@@ -215,7 +221,7 @@ export function SettingsOverview({
     {
       section: 'appearance',
       loading: false,
-      subtitle: t('appearance', { mode: cap(mode), theme: themeName }),
+      subtitle: t('appearance', { mode: modeLabel, theme: themeName }),
     },
   ];
 

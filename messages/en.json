@@ -14,8 +14,86 @@
     "noAccount": "Don't have an account?",
     "createAccount": "Create account"
   },
+  "SignupPage": {
+    "checkEmailTitle": "Check your email",
+    "checkEmailDesc": "We've sent a confirmation link to <styled>{email}</styled>. Please check your inbox and click the link to verify your account.",
+    "backToSignIn": "Back to sign in",
+    "titleCreateJoin": "Create account & join",
+    "titleCreate": "Create account",
+    "descJoin": "Verify your email, then accept the invitation to join your team.",
+    "descCreate": "Get started with CRM Template for WhatsApp",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorPasswordTooShort": "Password must be at least 6 characters",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "John Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "Repeat your password",
+    "creatingAccount": "Creating account...",
+    "createAccount": "Create account",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "ForgotPasswordPage": {
+    "checkEmailTitle": "Check your email",
+    "checkEmailDesc": "We've sent a password reset link to <styled>{email}</styled>. Please check your inbox.",
+    "backToSignIn": "Back to sign in",
+    "title": "Reset password",
+    "description": "Enter your email and we'll send you a reset link",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "sending": "Sending...",
+    "sendResetLink": "Send reset link"
+  },
+  "JoinPage": {
+    "roleAdmin": "Admin",
+    "roleAgent": "Agent",
+    "roleViewer": "Viewer",
+    "fail": {
+      "notFound": {
+        "title": "Invite not found",
+        "body": "This link doesn't match a valid invitation. Double-check the URL or ask the person who invited you to send a new one."
+      },
+      "used": {
+        "title": "Invite already used",
+        "body": "This invitation has already been accepted. If that wasn't you, ask the account admin to send a fresh link."
+      },
+      "expired": {
+        "title": "Invite expired",
+        "body": "This invitation has expired. Ask the account admin to send a new one — they take a few seconds to generate."
+      },
+      "serverError": {
+        "title": "Something went wrong",
+        "body": "We couldn't verify this invitation right now. Try refreshing the page in a moment."
+      }
+    },
+    "verifying": "Verifying invitation…",
+    "tryAgain": "Try again",
+    "createNewAccountInstead": "Create a new account instead",
+    "signIn": "Sign in",
+    "inviteTitle": "You're invited to <accountName>{name}</accountName>",
+    "inviteDesc": "You'll join as <roleTag>{role}</roleTag>. Link valid until {date}.",
+    "accepting": "Accepting…",
+    "acceptInvitation": "Accept invitation",
+    "acceptHint": "Accepting moves your login into <account>{name}</account>. Your empty personal account from signup will be cleaned up.",
+    "conflictTitle": "Can't join {name} with this account",
+    "conflictBodyPrefix": "To join <account>{name}</account>, sign out and sign up again with a different email address. The invite link stays valid as long as it hasn't expired.",
+    "staySignedIn": "Stay signed in",
+    "signingOut": "Signing out…",
+    "signOutDifferentEmail": "Sign out & use a different email",
+    "createAccountAndJoin": "Create account & join",
+    "alreadyHaveAccount": "I already have an account",
+    "toastAcceptFailed": "Failed to accept invitation",
+    "toastConflictDefault": "You are already in another account. Sign in with a different email to join this one.",
+    "toastWelcome": "Welcome to the team",
+    "toastServerError": "Could not reach the server",
+    "toastSignOutFailed": "Could not sign out. Try refreshing the page."
+  },
   "Sidebar": {
-    "title": "CRM Template for WhatsApp",
+    "title": "VASA CRM",
     "dashboard": "Dashboard",
     "inbox": "Inbox",
     "notifications": "Notifications",
@@ -58,7 +136,9 @@
     "menuSignOut": "Sign out"
   },
   "ModeToggle": {
-    "switchMode": "Switch to {mode} mode"
+    "switchMode": "Switch to {mode} mode",
+    "modeLight": "light",
+    "modeDark": "dark"
   },
   "AccountAccess": {
     "unlinkedTitle": "This user is not linked to an account",
@@ -173,7 +253,13 @@
       "selectConversation": "Select a conversation",
       "selectConversationHint": "Choose a conversation from the left to start messaging",
       "today": "Today",
-      "yesterday": "Yesterday"
+      "yesterday": "Yesterday",
+      "toastSendFailed": "Failed to send: {reason}",
+      "toastSendTemplateFailed": "Failed to send template: {reason}",
+      "networkErrorFallback": "network error",
+      "toastWaitForSend": "Wait for the message to finish sending",
+      "toastReactionFailed": "Reaction failed: {reason}",
+      "toastAssignmentFailed": "Failed to update assignment"
     },
     "sessionTimer": {
       "expired": "Expired",
@@ -209,7 +295,20 @@
       "send": "Send",
       "quickReplyNamePrompt": "Name this quick reply:",
       "quickReplySaved": "Saved as a quick reply.",
-      "quickReplySaveError": "Couldn't save the quick reply."
+      "quickReplySaveError": "Couldn't save the quick reply.",
+      "toastAiNotConfigured": "AI isn't set up yet — enable it in Settings → AI Assistant.",
+      "toastDraftFailed": "Couldn't draft a reply.",
+      "toastEmptyDraft": "The assistant didn't return a reply.",
+      "toastAiUnreachable": "Couldn't reach the AI assistant.",
+      "toastFileTooLarge": "File is {size} MB — {kind} limit is {max} MB.",
+      "toastUploadFailed": "Upload failed.",
+      "toastRecordingTooLong": "Recording is too long (over 16 MB).",
+      "toastRecordingUnsupported": "Voice recording isn't supported in this browser.",
+      "toastMicDenied": "Microphone access denied or unavailable.",
+      "kindImage": "image",
+      "kindVideo": "video",
+      "kindDocument": "document",
+      "kindAudio": "audio"
     },
     "bubble": {
       "photo": "Photo",
@@ -298,6 +397,17 @@
       "updateError": "Couldn’t update the AI assistant.",
       "networkError": "Couldn’t reach the server."
     }
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "description": "Conversations other teammates assign to you show up here.",
+    "markAllRead": "Mark all as read",
+    "retry": "Retry",
+    "emptyTitle": "No notifications yet",
+    "emptyHint": "You'll see an alert here when someone assigns you a conversation.",
+    "unreadAriaLabel": "Unread",
+    "toastMarkReadFailed": "Failed to mark notification as read",
+    "toastMarkAllFailed": "Failed to mark all as read"
   },
   "Contacts": {
     "page": {
@@ -840,7 +950,20 @@
         "updateError": "Failed to update",
         "duplicateError": "Failed to duplicate",
         "deleteError": "Failed to delete"
-      }
+      },
+      "triggerNewMessage": "New Message",
+      "triggerFirstMessage": "First Message from Contact",
+      "triggerKeywordMatch": "Keyword Match",
+      "triggerNewContact": "New Contact",
+      "triggerConversationAssigned": "Conversation Assigned",
+      "triggerTagAdded": "Tag Added",
+      "triggerTimeBased": "Time-Based",
+      "triggerInteractiveReply": "Button / List Reply",
+      "timeNever": "never",
+      "timeJustNow": "just now",
+      "timeM": "{min}m ago",
+      "timeH": "{hr}h ago",
+      "timeD": "{day}d ago"
     },
     "edit": {
       "loading": "Loading...",
@@ -862,7 +985,12 @@
         "failed": "failed"
       },
       "back": "Back",
-      "backAria": "Back"
+      "backAria": "Back",
+      "timeNever": "never",
+      "timeJustNow": "just now",
+      "timeM": "{min}m ago",
+      "timeH": "{hr}h ago",
+      "timeD": "{day}d ago"
     },
     "builder": {
       "steps": {
@@ -1022,7 +1150,45 @@
       }
     }
   },
+  "InteractiveBuilder": {
+    "kindButtons": "Reply buttons",
+    "kindList": "List",
+    "bodyLabel": "Body",
+    "bodyPlaceholder": "What the customer reads above the options",
+    "headerLabel": "Header (optional)",
+    "footerLabel": "Footer (optional)",
+    "showIdsLabel": "Show reply IDs (advanced)",
+    "previewLabel": "Preview",
+    "buttonsCount": "Buttons ({count}/{max})",
+    "idPlaceholder": "id",
+    "buttonLabelPlaceholder": "Button label",
+    "addButton": "Add button",
+    "listButtonLabelField": "List button label",
+    "rowsCount": "Rows ({count}/{max})",
+    "sectionTitlePlaceholder": "Section title (optional)",
+    "rowTitlePlaceholder": "Row title",
+    "rowDescriptionPlaceholder": "Description (optional)",
+    "addRow": "Add row",
+    "addSection": "Add section"
+  },
   "Flows": {
+    "header": {
+      "backToFlows": "Back to Flows",
+      "flowName": "Flow name",
+      "editedBadge": "Edited",
+      "unsavedChangesTooltip": "Unsaved changes — hit Save to persist",
+      "runsButton": "Runs",
+      "deleteButton": "Delete",
+      "pauseButton": "Pause",
+      "activateButton": "Activate",
+      "saveButton": "Save",
+      "activateDisabledTooltip": "Fix the issues below before activating",
+      "descriptionPlaceholder": "Add a short description (internal — customers don't see this)",
+      "descriptionAriaLabel": "Flow description",
+      "statusDraft": "Draft",
+      "statusActive": "Active",
+      "statusArchived": "Archived"
+    },
     "list": {
       "title": "Flows",
       "beta": "Beta",
@@ -1244,6 +1410,45 @@
       "tagNone": "{mode} tag (none picked)"
     }
   },
+  "Agents": {
+    "page": {
+      "title": "AI Agents",
+      "description": "Your bring-your-own-key AI agent — set it up, then test it in the playground before it replies to customers in the inbox.",
+      "tabPlayground": "Playground",
+      "tabSetup": "Setup",
+      "tabUsage": "Usage"
+    },
+    "playground": {
+      "headerTitle": "Playground",
+      "headerSubtitle": "— test replies as if you were a customer",
+      "resetButton": "Reset",
+      "emptyTitle": "Send a message to see how your agent would reply.",
+      "emptyHint": "It uses your knowledge base and behaves exactly like the auto-reply bot — including handoff.",
+      "goToSetupLink": "Not set up yet? Go to Setup",
+      "handoffNote": "Would hand off to a human here",
+      "thinking": "Thinking…",
+      "inputPlaceholder": "Type a customer message…",
+      "toastNotConfigured": "No agent configured yet — finish Setup first.",
+      "toastFailedReply": "Couldn't get a reply.",
+      "toastNetworkError": "Couldn't reach the agent."
+    },
+    "usage": {
+      "title": "Token usage",
+      "description": "Tokens spent on your provider key by drafts and the auto-reply bot. Counts only — no message content is stored here.",
+      "windowOption": "Last {days} days",
+      "statTotalTokens": "Total tokens",
+      "statLlmCalls": "LLM calls",
+      "statAutoReply": "Auto-reply",
+      "statDrafts": "Drafts",
+      "tokensPerDayLabel": "Tokens per day",
+      "byModelLabel": "By model",
+      "byModelCalls": "{count} {count, plural, =1 {call} other {calls}}",
+      "truncatedNote": "Showing a partial window — usage is high enough that only the most recent records are summarized here.",
+      "noUsageYet": "No AI usage in the last {days} days yet.",
+      "noUsageHint": "This fills in as the assistant drafts and auto-replies.",
+      "toastFailedLoad": "Failed to load usage"
+    }
+  },
   "Settings": {
     "pageTitle": "Settings",
     "pageDesc": "Everything in one place — your account and your workspace. Pick a section to manage it.",
@@ -1262,7 +1467,9 @@
       "fieldsCount": "{count} custom {count, plural, =1 {field} other {fields}}",
       "appearance": "{mode} mode · {theme} accent",
       "yourAccount": "Your account",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "modeLight": "light",
+      "modeDark": "dark"
     },
     "members": {
       "title": "Team members",
@@ -1293,7 +1500,14 @@
       "removeDialogDesc": "Remove <bold>{name}</bold> from the account? They'll be signed out of this account and given a fresh personal account on their next sign-in. Their login isn't deleted.",
       "cancel": "Cancel",
       "removing": "Removing...",
-      "removeBtn": "Remove member"
+      "removeBtn": "Remove member",
+      "toastLoadMembersFailed": "Failed to load members",
+      "toastLoadInvitationsFailed": "Failed to load invitations",
+      "toastNetworkError": "Could not reach the server",
+      "toastUpdateRoleFailed": "Failed to update role",
+      "toastRemoveMemberFailed": "Failed to remove member",
+      "toastRevokeFailed": "Failed to revoke invitation",
+      "defaultMemberAlt": "Member"
     },
     "invite": {
       "inviteCreated": "Invite created",
@@ -1321,6 +1535,8 @@
       "labelTooLong": "Label must be {max} characters or fewer",
       "copied": "Invite link copied",
       "clipboardBlocked": "Clipboard blocked — copy the link manually",
+      "toastCreateFailed": "Failed to create invitation",
+      "toastNetworkError": "Could not reach the server. Try again?",
       "whatsappMessage": "Join {accountName} on wacrm using this link (valid for {expiresInDays} days): {url}"
     },
     "tagsAndFields": {
@@ -1462,7 +1678,10 @@
       "toastInvalidImage": "Header image must be a JPEG or PNG.",
       "toastImageTooLarge": "Image is {size} MB — Meta's limit is 5 MB.",
       "toastUploadSuccess": "Image uploaded.",
-      "toastUploadFailed": "Upload failed."
+      "toastUploadFailed": "Upload failed.",
+      "formatImage": "image",
+      "formatVideo": "video",
+      "formatDocument": "document"
     },
     "roles": {
       "admin": "Admin",
@@ -1498,7 +1717,9 @@
       "apiCredentialsTitle": "API Credentials",
       "apiCredentialsDesc": "Enter your Meta WhatsApp Business API credentials.",
       "phoneNumberId": "Phone Number ID",
+      "phoneNumberIdPlaceholder": "e.g. 100234567890123",
       "wabaId": "WhatsApp Business Account ID",
+      "wabaIdPlaceholder": "e.g. 100234567890456",
       "accessToken": "Permanent Access Token",
       "accessTokenPlaceholder": "Enter your access token",
       "tokenHidden": "Token is hidden for security. Re-enter it to update configuration.",
@@ -1518,6 +1739,26 @@
       "mirrorInboundDesc": "Save a copy of every photo, video, voice note and document customers send. Uses your Supabase storage; files over 16 MB are skipped.",
       "mirrorInboundOffWarning": "New attachments will stop being copied and will become unavailable about 30 days after they arrive.",
       "mirrorInboundSaveFailed": "Could not update the attachment setting.",
+      "toastLoadFailed": "Failed to load WhatsApp configuration",
+      "toastPhoneRequired": "Phone Number ID is required",
+      "toastTokenRequiredInitial": "Access Token is required for initial setup",
+      "toastReenterToken": "Please re-enter the Access Token to save changes",
+      "toastSaveFailed": "Failed to save configuration",
+      "toastRegisterFailed": "Saved, but Meta couldn't register the number: {error}",
+      "toastRegistrationSkipped": "Credentials saved and verified. Inbound registration was skipped (no PIN) — see Registration status below.",
+      "toastConnectedLive": "Live — {name} can now receive events.",
+      "toastConnectedGeneric": "WhatsApp connected. Events will start flowing within a minute.",
+      "toastConnectedTo": "Connected to {name}",
+      "toastApiConnectionOk": "API connection successful",
+      "toastApiConnectionFailed": "API connection failed",
+      "toastConnectionTestFailed": "Connection test failed. Check network and try again.",
+      "toastFullyWired": "Number is fully wired — Meta is delivering events.",
+      "toastNotFullyRegistered": "Number is not fully registered. See the checks below for which step failed.",
+      "toastVerifyEndpointUnreachable": "Could not reach the verification endpoint.",
+      "confirmResetConfig": "This will delete the current WhatsApp config so you can re-enter it. Continue?",
+      "toastResetFailed": "Failed to reset configuration",
+      "toastResetSuccess": "Configuration cleared. You can now re-enter your credentials.",
+      "toastWebhookCopied": "Webhook URL copied to clipboard",
       "saving": "Saving...",
       "saveConfig": "Save Configuration",
       "testing": "Testing...",
@@ -1623,7 +1864,9 @@
       "useMode": "Use {mode} mode",
       "active": "Active",
       "accentColor": "Accent color",
-      "useTheme": "Use {name} theme"
+      "useTheme": "Use {name} theme",
+      "modeLight": "light",
+      "modeDark": "dark"
     },
     "security": {
       "title": "Login & security",
@@ -1745,6 +1988,27 @@
       "reindex": "Reindex",
       "reindexTooltip": "Re-embed all documents (e.g. after adding an embeddings key)",
       "loading": "Loading…"
+    },
+    "quickReplies": {
+      "panelTitle": "Quick replies",
+      "panelDesc": "Reusable snippets — plain text or a saved interactive message — that agents can insert from the inbox composer.",
+      "newButton": "New quick reply",
+      "emptyState": "No quick replies yet. Create one to reuse it across conversations.",
+      "editDialogTitle": "Edit quick reply",
+      "newDialogTitle": "New quick reply",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Business hours",
+      "kindText": "Text",
+      "kindInteractive": "Interactive",
+      "contentPlaceholder": "The message text to insert",
+      "cancelButton": "Cancel",
+      "saveButton": "Save",
+      "toastNameRequired": "Give the quick reply a name.",
+      "toastSaveFailed": "Couldn't save the quick reply.",
+      "toastUpdated": "Quick reply updated.",
+      "toastCreated": "Quick reply created.",
+      "confirmDelete": "Delete this quick reply?",
+      "toastDeleteFailed": "Couldn't delete the quick reply."
     }
   }
 }

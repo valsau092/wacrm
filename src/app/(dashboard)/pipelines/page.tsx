@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Pipeline, PipelineStage, Deal } from "@/types";
+import type { Pipeline, PipelineStage, Deal, DealStatus } from "@/types";
 import { PipelineBoard } from "@/components/pipelines/pipeline-board";
 import { PipelineSettings } from "@/components/pipelines/pipeline-settings";
 import { DealForm } from "@/components/pipelines/deal-form";
@@ -216,9 +216,25 @@ export default function PipelinesPage() {
 
   const handleDealMoved = useCallback(
     async (dealId: string, newStageId: string) => {
+      // Same criteria as the deals_sync_status_from_stage trigger (041) —
+      // mirrored here only so the optimistic local update doesn't lag
+      // behind what the DB will actually persist. The write below still
+      // sends only stage_id; the trigger remains the single source of
+      // truth for the persisted status.
+      const newStage = stages.find((s) => s.id === newStageId);
+      const newStatus: DealStatus = newStage?.is_won_stage
+        ? "won"
+        : newStage?.is_lost_stage
+          ? "lost"
+          : "open";
+
       // Optimistic update — board already animated; just persist.
       setDeals((prev) =>
-        prev.map((d) => (d.id === dealId ? { ...d, stage_id: newStageId } : d)),
+        prev.map((d) =>
+          d.id === dealId
+            ? { ...d, stage_id: newStageId, status: newStatus }
+            : d,
+        ),
       );
       const { error } = await supabase
         .from("deals")
@@ -229,7 +245,7 @@ export default function PipelinesPage() {
         refreshDeals();
       }
     },
-    [supabase, refreshDeals, t],
+    [stages, supabase, refreshDeals, t],
   );
 
   const handleAddDeal = useCallback(
