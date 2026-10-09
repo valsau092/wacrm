@@ -165,12 +165,26 @@ export async function POST(request: Request) {
         templateMessageParams: template_message_params,
         interactivePayload: interactive_payload,
         replyToMessageId: reply_to_message_id,
+        senderId: userId,
       })
+
+      // A human just wrote in this thread — stop the AI agent answering
+      // over them. This route is only ever called by a logged-in user
+      // (the public API, Flows, automations and broadcasts send through
+      // their own paths), so no origin flag is needed to tell them apart.
+      const aiPaused = await autoPauseAiOnAgentReply(
+        supabase,
+        accountId,
+        conversationId
+      )
 
       return NextResponse.json({
         success: true,
         message_id: result.messageId,
         whatsapp_message_id: result.whatsappMessageId,
+        // True only when THIS send flipped the conversation to paused,
+        // so the UI can tell the agent why the AI went quiet.
+        ai_paused: aiPaused,
       })
     } catch (err) {
       if (err instanceof SendMessageError) {
@@ -229,4 +243,45 @@ async function findOrCreateConversation(
   }
 
   return created.id
+}
+
+/**
+ * Pause the AI on a conversation after a human agent's send, when the
+ * account's `auto_pause_ai_on_agent_reply` setting is on (migration
+ * 043). Returns true only if the conversation was active and is now
+ * paused. Best-effort: the message is already sent, so a failure here
+ * is logged and never fails the request.
+ */
+async function autoPauseAiOnAgentReply(
+  supabase: SendSupabase,
+  accountId: string,
+  conversationId: string
+): Promise<boolean> {
+  try {
+    const { data: config } = await supabase
+      .from('whatsapp_config')
+      .select('auto_pause_ai_on_agent_reply')
+      .eq('account_id', accountId)
+      .maybeSingle()
+    if (config?.auto_pause_ai_on_agent_reply === false) return false
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .update({ ai_autoreply_disabled: true })
+      .eq('id', conversationId)
+      .eq('account_id', accountId)
+      .eq('ai_autoreply_disabled', false)
+      .select('id')
+    if (error) {
+      console.error('[whatsapp/send] auto-pause AI failed:', error.message)
+      return false
+    }
+    return (data?.length ?? 0) > 0
+  } catch (err) {
+    console.error(
+      '[whatsapp/send] auto-pause AI threw:',
+      err instanceof Error ? err.message : err
+    )
+    return false
+  }
 }

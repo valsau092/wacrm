@@ -67,6 +67,13 @@ export function encodeCursor(row: { created_at: string; id: string }): string {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** True for a syntactically valid UUID. Path ids are checked with this
+ *  before querying, so a malformed id is a 404 rather than a Postgres
+ *  `22P02` surfacing as a 500. */
+export function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 /** Decode a cursor string, or null if missing/malformed/untrusted. */
 export function decodeCursor(value: string | null): Cursor | null {
   if (!value) return null;

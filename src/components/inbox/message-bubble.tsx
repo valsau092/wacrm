@@ -27,6 +27,9 @@ import { useTranslations } from "next-intl";
 
 interface MessageBubbleProps {
   message: Message;
+  /** Name of the agent who sent this outbound message (from
+   *  `messages.sender_id`), shown next to the timestamp. */
+  senderName?: string | null;
   /** Pre-computed quote info for messages that reply to another. */
   reply?: { authorLabel: string; preview: string } | null;
   reactions?: MessageReaction[];
@@ -217,6 +220,7 @@ function MessageContent({
 
 export function MessageBubble({
   message,
+  senderName,
   reply,
   reactions,
   currentUserId,
@@ -275,6 +279,16 @@ export function MessageBubble({
             >
               <Sparkles className="h-2.5 w-2.5" />
               {t("aiBadge")}
+            </span>
+          )}
+          {/* Which teammate sent it — only on human inbox sends, which
+              are the ones that carry `sender_id`. */}
+          {isAgent && !message.ai_generated && senderName && (
+            <span
+              className="max-w-[10rem] truncate text-[10px] font-medium text-primary-foreground/80"
+              title={t("sentByTitle", { name: senderName })}
+            >
+              {t("sentBy", { name: senderName })}
             </span>
           )}
           <span

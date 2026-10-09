@@ -10,7 +10,7 @@ type Params = { params: Promise<{ conversationId: string }> }
  * Toggle the AI auto-reply bot for one conversation from the inbox — the
  * "Take over" / "Resume AI" banner.
  *
- * Body: { paused: boolean, assign_to_me?: boolean }
+ * Body: { paused: boolean, assign_to_me?: boolean, keep_assignment?: boolean }
  *   - paused: true  → pause the bot here (a human is taking over). When
  *                     `assign_to_me` is set, also assign the thread to the
  *                     caller (the usual "Take over" flow). Assignment
@@ -20,6 +20,10 @@ type Params = { params: Promise<{ conversationId: string }> }
  *                     fresh slots, and clear the handoff note. If the
  *                     caller currently owns the thread, unassign it too so
  *                     the bot isn't blocked by the "human owns this" gate.
+ *   - keep_assignment: true → only flip the pause flag and leave the
+ *                     assignee untouched (the header "IA activa / IA
+ *                     pausada" toggle, used with an external AI agent
+ *                     that reads the flag via the public API).
  *
  * Writes go through the RLS-scoped SSR client, so a conversation outside
  * the caller's account simply isn't found (404).
@@ -43,6 +47,7 @@ export async function POST(request: Request, { params }: Params) {
     }
     const paused = body.paused as boolean
     const assignToMe = body.assign_to_me === true
+    const keepAssignment = body.keep_assignment === true
 
     // Confirm the conversation is in the caller's account before writing.
     const { data: conv, error: convErr } = await supabase
@@ -64,7 +69,9 @@ export async function POST(request: Request, { params }: Params) {
 
     const update: Record<string, unknown> = { ai_autoreply_disabled: paused }
 
-    if (paused) {
+    if (keepAssignment) {
+      // Pure pause/resume toggle — nothing else changes.
+    } else if (paused) {
       if (assignToMe) update.assigned_agent_id = userId
     } else {
       // Resuming hands the thread *back to the bot*. Clear the pause and

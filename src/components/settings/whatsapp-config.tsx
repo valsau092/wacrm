@@ -86,6 +86,10 @@ export function WhatsAppConfig() {
   // a viewer's toggle would match zero rows and appear to work.
   const [mirrorMedia, setMirrorMedia] = useState(true);
   const [savingMirror, setSavingMirror] = useState(false);
+  // Pause the AI when a human writes from the inbox (migration 043).
+  // Same direct-write pattern as the mirror switch above.
+  const [autoPauseAi, setAutoPauseAi] = useState(true);
+  const [savingAutoPause, setSavingAutoPause] = useState(false);
 
   // True once /register has succeeded on Meta's side (timestamp set
   // in the row). When false, the saved config is metadata-only and
@@ -141,6 +145,7 @@ export function WhatsAppConfig() {
         // Undefined on a row read before migration 039 — treat that as
         // on, matching the webhook's own default.
         setMirrorMedia(data.mirror_inbound_media !== false);
+        setAutoPauseAi(data.auto_pause_ai_on_agent_reply !== false);
       } else {
         setConfig(null);
         setPhoneNumberId('');
@@ -223,6 +228,27 @@ export function WhatsAppConfig() {
       toast.error(t('mirrorInboundSaveFailed'));
     } finally {
       setSavingMirror(false);
+    }
+  }
+
+  async function handleToggleAutoPauseAi(next: boolean) {
+    if (!config || !accountId || savingAutoPause) return;
+    const previous = autoPauseAi;
+    setAutoPauseAi(next);
+    setSavingAutoPause(true);
+    try {
+      const { error } = await supabase
+        .from('whatsapp_config')
+        .update({ auto_pause_ai_on_agent_reply: next })
+        .eq('account_id', accountId);
+      if (error) throw new Error(error.message);
+      setConfig({ ...config, auto_pause_ai_on_agent_reply: next });
+    } catch (error) {
+      console.error('Failed to update AI auto-pause setting:', error);
+      setAutoPauseAi(previous);
+      toast.error(t('autoPauseAiSaveFailed'));
+    } finally {
+      setSavingAutoPause(false);
     }
   }
 
@@ -758,6 +784,36 @@ export function WhatsAppConfig() {
                   onCheckedChange={handleToggleMirrorMedia}
                   disabled={savingMirror || !canEditSettings}
                   aria-label={t('mirrorInbound')}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI hand-off: pause the AI when a teammate writes. */}
+        {config && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-foreground">{t('aiTitle')}</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                {t('aiDesc')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t('autoPauseAi')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('autoPauseAiDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={autoPauseAi}
+                  onCheckedChange={handleToggleAutoPauseAi}
+                  disabled={savingAutoPause || !canEditSettings}
+                  aria-label={t('autoPauseAi')}
                 />
               </div>
             </CardContent>

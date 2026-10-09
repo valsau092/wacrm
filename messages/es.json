@@ -229,7 +229,8 @@
       "clearAll": "Limpiar todo",
       "noConversations": "No se encontraron conversaciones",
       "noMessagesYet": "Todavía no hay mensajes",
-      "unknown": "Desconocido"
+      "unknown": "Desconocido",
+      "aiPaused": "IA pausada en esta conversación"
     },
     "messageThread": {
       "backToConversations": "Volver a conversaciones",
@@ -259,7 +260,8 @@
       "networkErrorFallback": "error de red",
       "toastWaitForSend": "Esperar a que el mensaje termine de enviarse",
       "toastReactionFailed": "Error al reaccionar: {reason}",
-      "toastAssignmentFailed": "No se pudo actualizar la asignación"
+      "toastAssignmentFailed": "No se pudo actualizar la asignación",
+      "aiAutoPaused": "La IA se pausó porque escribiste en esta conversación. Podés reactivarla con el botón «IA pausada»."
     },
     "sessionTimer": {
       "expired": "Vencida",
@@ -327,7 +329,9 @@
       "downloadFailed": "No se pudo descargar el adjunto",
       "viewImage": "Ver imagen",
       "expandVideo": "Expandir video",
-      "imageAlt": "Imagen compartida"
+      "imageAlt": "Imagen compartida",
+      "sentBy": "Asesor: {name}",
+      "sentByTitle": "Enviado por {name}"
     },
     "mediaViewer": {
       "counter": "{index} de {total}",
@@ -395,6 +399,16 @@
       "tookOver": "Se tomó el control de esta conversación.",
       "resumed": "Se reanudó la IA.",
       "updateError": "No se pudo actualizar el asistente de IA.",
+      "networkError": "No se pudo conectar con el servidor."
+    },
+    "aiToggle": {
+      "active": "IA activa",
+      "paused": "IA pausada",
+      "pauseHint": "La IA responde en esta conversación. Clic para pausarla.",
+      "resumeHint": "La IA está pausada en esta conversación. Clic para reactivarla.",
+      "pausedToast": "IA pausada en esta conversación.",
+      "resumedToast": "IA reactivada en esta conversación.",
+      "updateError": "No se pudo cambiar el estado de la IA.",
       "networkError": "No se pudo conectar con el servidor."
     }
   },
@@ -494,9 +508,9 @@
         "custom": "Campos personalizados",
         "deals": "Negocios",
         "tags": "Etiquetas",
-      "noTags": "Sin etiquetas",
-      "noDeals": "Sin negocios",
-      "addNotePlaceholder": "Agregar una nota..."
+        "noTags": "Sin etiquetas",
+        "noDeals": "Sin negocios",
+        "addNotePlaceholder": "Agregar una nota..."
       },
       "actions": {
         "edit": "Editar",
@@ -1593,13 +1607,11 @@
       "deleteLocallyAria": "Eliminar la plantilla localmente",
       "deleteMetaLocallyTitle": "Eliminar de Meta y localmente",
       "deleteLocallyTitle": "Eliminar localmente",
-
       "dialogEditTitle": "Editar plantilla de mensaje",
       "dialogNewTitle": "Nueva plantilla de mensaje",
       "dialogEditDesc": "Guardar los cambios para volver a enviar a Meta. El estado va a pasar a PENDING durante la revisión.",
       "dialogNewDesc": "Armar una plantilla y enviarla a Meta para su aprobación. Una vez aprobada, se puede usar en difusiones y en la bandeja de entrada.",
       "authWarning": "Las plantillas AUTHENTICATION tienen un cuerpo fijo + un botón OTP que necesita un builder distinto. Por ahora, crearlas en Meta WhatsApp Manager y usar <bold>Sincronizar desde Meta</bold> para traerlas.",
-
       "templateName": "Nombre de la plantilla",
       "namePlaceholder": "por ejemplo, order_confirmation",
       "nameFixed": "El nombre queda fijo una vez que la plantilla existe en Meta — crear una plantilla nueva para cambiarlo.",
@@ -1608,7 +1620,6 @@
       "language": "Idioma",
       "langFixed": "El idioma queda fijo una vez que la plantilla existe en Meta.",
       "langHint": "Tiene que coincidir exactamente con el código de Meta — <code>en_US</code> y <code>en</code> son distintos.",
-
       "header": "Encabezado",
       "headerNone": "Ninguno",
       "headerText": "Texto",
@@ -1618,7 +1629,6 @@
       "headerTextPlaceholder": "Texto del encabezado (máx. 60 caracteres, {{1}} opcional)",
       "headerSampleAria": "Valor de ejemplo para la variable del encabezado",
       "headerSamplePlaceholder": "Valor de ejemplo para {{1}} (obligatorio para la revisión de Meta)",
-
       "uploadImage": "Subir imagen",
       "uploadHint": "JPEG o PNG, ≤5 MB",
       "mediaUrlPlaceholder": "https://… (o pegar un enlace público de {format})",
@@ -1626,17 +1636,14 @@
       "mediaHint": "Tiene que ser un enlace HTTPS de acceso público. Meta lo descarga una vez durante la revisión, así que tiene que seguir activo por ~24 horas.",
       "videoHint": " Recomendado: MP4 / 3GPP, ≤16 MB, ≤60 segundos.",
       "documentHint": " Recomendado: PDF, ≤100 MB.",
-
       "bodyText": "Texto del cuerpo",
       "bodyPlaceholder": "Hola {{1}}, tu pedido {{2}} está confirmado.",
       "bodyHint": "Usar {{1}}, {{2}} para las variables (tienen que ser consecutivas empezando en {{1}}).",
       "sampleValues": "Valores de ejemplo (Meta los usa para revisar la plantilla)",
       "sampleAria": "Valor de ejemplo para la variable del cuerpo {var}",
       "samplePlaceholder": "Ejemplo para {var}",
-
       "footer": "Pie (opcional)",
       "footerPlaceholder": "Texto del pie opcional (máx. 60 caracteres)",
-
       "buttons": "Botones (opcional)",
       "addButton": "Agregar botón",
       "buttonsLimit": "Hasta {max} botones. Los botones QUICK_REPLY tienen que ir antes que los de URL, teléfono o código de copia.",
@@ -1649,19 +1656,16 @@
       "urlSamplePlaceholder": "Valor de ejemplo para {{1}} (obligatorio cuando la URL tiene una variable)",
       "phonePlaceholder": "+15551234567",
       "codePlaceholder": "Código de ejemplo (por ejemplo, SUMMER20)",
-
       "cancel": "Cancelar",
       "saving": "Guardando…",
       "submitting": "Enviando…",
       "saveResubmit": "Guardar y reenviar",
       "submitApproval": "Enviar para aprobación",
-
       "deleteDialogTitle": "¿Eliminar la plantilla?",
       "deleteMetaDesc": "\"{name}\" se va a eliminar de Meta y de wacrm. Las difusiones activas que usan esta plantilla van a empezar a fallar en el próximo envío. Esta acción no se puede deshacer.",
       "deleteLocalDesc": "\"{name}\" se va a eliminar de wacrm. Nunca se envió a Meta, así que no hace falta ninguna limpieza remota.",
       "deleting": "Eliminando…",
       "delete": "Eliminar",
-
       "toastLoadFailed": "No se pudieron cargar las plantillas",
       "toastSubmitFailed": "No se pudo enviar",
       "toastSubmitEditSuccess": "Edición enviada — Meta normalmente revisa dentro de las 24 horas.",
@@ -1785,7 +1789,12 @@
       "step4_3": "Pegar la <strong class=\"text-foreground\">URL de callback del Webhook</strong> de arriba",
       "step4_4": "Ingresar el mismo <strong class=\"text-foreground\">Verify Token</strong> configurado acá",
       "step4_5": "Suscribirse al campo de webhook \"messages\"",
-      "metaDocs": "Documentación de la API de WhatsApp de Meta"
+      "metaDocs": "Documentación de la API de WhatsApp de Meta",
+      "aiTitle": "Asistente de IA",
+      "aiDesc": "Cómo interactúa la IA con las respuestas de tu equipo.",
+      "autoPauseAi": "Pausar la IA cuando un asesor escribe",
+      "autoPauseAiDesc": "Si alguien del equipo envía un mensaje desde la bandeja, la IA deja de responder en esa conversación hasta que se reactive con el botón de la cabecera. No aplica a envíos por API, flujos ni difusiones.",
+      "autoPauseAiSaveFailed": "No se pudo actualizar la configuración de la IA."
     },
     "sections": {
       "overview": "Resumen",
@@ -1832,7 +1841,6 @@
       "profileSaved": "Perfil guardado",
       "emailChangeFailed": "No se pudo cambiar el correo electrónico: {message}",
       "profileSavedEmailCheck": "Perfil guardado — revisar el correo electrónico para confirmar el cambio de dirección",
-
       "passwordTitle": "Contraseña",
       "passwordDesc": "Usar al menos {min} caracteres. La sesión en este dispositivo se mantiene iniciada después de cambiarla.",
       "currentPassword": "Contraseña actual",
@@ -1846,7 +1854,6 @@
       "currentPasswordIncorrect": "La contraseña actual es incorrecta",
       "passwordUpdateFailed": "No se pudo actualizar la contraseña: {message}",
       "passwordUpdated": "Contraseña actualizada",
-
       "sessionsTitle": "Sesiones activas",
       "sessionsDesc": "Cerrar sesión en todos los dispositivos donde esté iniciada — incluido este. Útil si se perdió una notebook o se compartió la contraseña.",
       "signOutAll": "Cerrar sesión en todos los dispositivos",

@@ -12,6 +12,7 @@ import {
   parseListParams,
   keysetFilter,
   buildPage,
+  isUuid,
 } from '@/lib/api/v1/pagination';
 import { serializeMessage } from '@/lib/api/v1/conversations';
 import type { Message } from '@/types';
@@ -23,6 +24,7 @@ export async function GET(
   try {
     const ctx = await requireApiKey(request, 'messages:read');
     const { id } = await params;
+    if (!isUuid(id)) return fail('not_found', 'Conversation not found', 404);
     const { limit, cursor } = parseListParams(request);
 
     // Gate on account ownership of the conversation first.

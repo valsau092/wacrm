@@ -51,4 +51,23 @@ describe('serializeMessage', () => {
     const agent = { ...inbound, sender_type: 'agent' } as unknown as Message;
     expect(serializeMessage(agent).direction).toBe('outbound');
   });
+
+  it('attributes outbound messages to ai / agent / automation', () => {
+    const base = {
+      id: 'm1',
+      conversation_id: 'conv1',
+      content_type: 'text',
+      status: 'sent',
+      created_at: '2026-01-01T00:00:00Z',
+    };
+    const by = (m: Record<string, unknown>) => {
+      const out = serializeMessage({ ...base, ...m } as unknown as Message);
+      return [out.sent_by_type, out.sent_by_agent_id];
+    };
+    expect(by({ sender_type: 'customer', sender_id: 'u1' })).toEqual([null, null]);
+    expect(by({ sender_type: 'agent', ai_generated: true })).toEqual(['ai', null]);
+    expect(by({ sender_type: 'agent', sender_id: 'u1' })).toEqual(['agent', 'u1']);
+    expect(by({ sender_type: 'bot' })).toEqual(['automation', null]);
+    expect(by({ sender_type: 'agent' })).toEqual(['unknown', null]);
+  });
 });

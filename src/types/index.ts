@@ -298,6 +298,11 @@ export interface WhatsAppConfig {
    * inbound attachments expire. Migration 039.
    */
   mirror_inbound_media?: boolean;
+  /**
+   * Pause the AI on a conversation (`conversations.ai_autoreply_disabled`)
+   * when a human agent sends from the inbox. Default on. Migration 043.
+   */
+  auto_pause_ai_on_agent_reply?: boolean;
 }
 
 // Raw Meta status enum. We persist this verbatim from Meta (sync + webhook)

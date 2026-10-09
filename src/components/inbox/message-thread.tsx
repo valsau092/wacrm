@@ -52,6 +52,7 @@ import {
 import { deleteAccountMedia } from "@/lib/storage/upload-media";
 import { TemplatePicker } from "./template-picker";
 import { AiThreadBanner } from "./ai-thread-banner";
+import { AiPauseToggle } from "./ai-pause-toggle";
 import { buildReplyPreview } from "./reply-quote";
 import { renderTemplateBody } from "@/lib/whatsapp/template-body";
 import { toast } from "sonner";
@@ -74,6 +75,8 @@ interface MessageThreadProps {
     conversationId: string,
     assignedAgentId: string | null,
   ) => void;
+  /** Fired after the header "IA activa / IA pausada" toggle flips. */
+  onAiPausedChange?: (conversationId: string, paused: boolean) => void;
   /**
    * On mobile, the thread is shown full-screen with the conversation list
    * hidden. This callback lets the page deselect the active conversation
@@ -159,6 +162,7 @@ export function MessageThread({
   onUpdateMessage,
   onStatusChange,
   onAssignChange,
+  onAiPausedChange,
   onBack,
   resyncToken = 0,
   onRefresh,
@@ -464,6 +468,18 @@ export function MessageThread({
     }
   }, [messages]);
 
+  // The send route pauses the AI when a human writes (account setting,
+  // on by default) and reports `ai_paused: true` when this send is what
+  // paused it. Mirror it locally and tell the agent why the AI went quiet.
+  const notifyAiAutoPaused = useCallback(
+    (response: { ai_paused?: boolean } | null | undefined) => {
+      if (!conversation || response?.ai_paused !== true) return;
+      onAiPausedChange?.(conversation.id, true);
+      toast.info(t("aiAutoPaused"));
+    },
+    [conversation, onAiPausedChange, t]
+  );
+
   const handleSend = useCallback(
     async (text: string, replyToId?: string) => {
       if (!conversation) return;
@@ -475,6 +491,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: "text",
         content_text: text,
         status: "sending",
@@ -511,6 +528,7 @@ export function MessageThread({
         // with the real DB row. If realtime hasn't arrived yet, at least
         // flip status to 'sent' so the UI stops showing "sending".
         onUpdateMessage(tempId, { status: "sent" });
+        notifyAiAutoPaused(payload);
       } catch (err) {
         console.error("Failed to send message:", err);
         const reason = err instanceof Error ? err.message : t("networkErrorFallback");
@@ -518,7 +536,7 @@ export function MessageThread({
         onUpdateMessage(tempId, { status: "failed" });
       }
     },
-    [conversation, onNewMessage, onUpdateMessage, t]
+    [conversation, onNewMessage, onUpdateMessage, notifyAiAutoPaused, user?.id, t]
   );
 
   const handleSendMedia = useCallback(
@@ -538,6 +556,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: payload.kind,
         content_text: contentText,
         media_url: payload.mediaUrl,
@@ -576,6 +595,7 @@ export function MessageThread({
         }
 
         onUpdateMessage(tempId, { status: "sent" });
+        notifyAiAutoPaused(data);
       } catch (err) {
         console.error("Failed to send media:", err);
         const reason = err instanceof Error ? err.message : t("networkErrorFallback");
@@ -584,7 +604,7 @@ export function MessageThread({
         void deleteAccountMedia(CHAT_MEDIA_BUCKET, payload.path).catch(() => {});
       }
     },
-    [conversation, onNewMessage, onUpdateMessage, t],
+    [conversation, onNewMessage, onUpdateMessage, notifyAiAutoPaused, user?.id, t],
   );
 
   const handleSendInteractive = useCallback(
@@ -598,6 +618,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: "interactive",
         content_text: payload.body,
         interactive_payload: payload,
@@ -630,6 +651,7 @@ export function MessageThread({
         }
 
         onUpdateMessage(tempId, { status: "sent" });
+        notifyAiAutoPaused(data);
       } catch (err) {
         console.error("Failed to send interactive message:", err);
         const reason = err instanceof Error ? err.message : t("networkErrorFallback");
@@ -637,7 +659,7 @@ export function MessageThread({
         onUpdateMessage(tempId, { status: "failed" });
       }
     },
-    [conversation, onNewMessage, onUpdateMessage, t],
+    [conversation, onNewMessage, onUpdateMessage, notifyAiAutoPaused, user?.id, t],
   );
 
   const handleStatusChange = useCallback(
@@ -677,6 +699,7 @@ export function MessageThread({
         id: tempId,
         conversation_id: conversation.id,
         sender_type: "agent",
+        sender_id: user?.id,
         content_type: "template",
         content_text: renderedBody,
         template_name: template.name,
@@ -719,6 +742,7 @@ export function MessageThread({
         }
 
         onUpdateMessage(tempId, { status: "sent" });
+        notifyAiAutoPaused(payload);
       } catch (err) {
         console.error("Failed to send template:", err);
         const reason = err instanceof Error ? err.message : t("networkErrorFallback");
@@ -726,7 +750,7 @@ export function MessageThread({
         onUpdateMessage(tempId, { status: "failed" });
       }
     },
-    [conversation, onNewMessage, onUpdateMessage, t],
+    [conversation, onNewMessage, onUpdateMessage, notifyAiAutoPaused, user?.id, t],
   );
 
   // Build a quick id → Message map so reply quotes can be rendered without
@@ -988,6 +1012,14 @@ export function MessageThread({
             </button>
           )}
 
+          {/* Per-conversation AI pause (read by the external AI agent
+              through GET /api/v1/conversations/{id} → ai_paused). */}
+          <AiPauseToggle
+            conversationId={conversation.id}
+            paused={conversation.ai_autoreply_disabled ?? false}
+            onChange={(paused) => onAiPausedChange?.(conversation.id, paused)}
+          />
+
           {/* Status dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className={cn(
@@ -1141,6 +1173,12 @@ export function MessageThread({
                       >
                         <MessageBubble
                           message={msg}
+                          senderName={
+                            msg.sender_id
+                              ? (profiles.find((p) => p.user_id === msg.sender_id)
+                                  ?.full_name ?? null)
+                              : null
+                          }
                           reply={reply}
                           reactions={msgReactions}
                           currentUserId={user?.id}

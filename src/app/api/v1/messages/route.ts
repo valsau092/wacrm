@@ -13,8 +13,8 @@
 // Body:
 //   {
 //     "to": "+14155550123",                 // required, E.164
-//     "type": "text",                        // text|template|image|video|document|audio (default: text)
-//     "text": "Hello!",                      // text body, or media caption
+//     "type": "text",                        // text|template|image|video|document|audio (default: text; alias: content_type)
+//     "text": "Hello!",                      // text body, or media caption (alias: content_text)
 //     "media_url": "https://…/file.pdf",     // required for image/video/document/audio
 //     "filename": "invoice.pdf",             // optional, document filename
 //     "template": {                          // required when type=template
@@ -23,7 +23,8 @@
 //       "params": ["A123"] | { "body": [...] }   // array = positional body; object = structured
 //     },
 //     "reply_to_message_id": "<uuid>",       // optional, must be in the same conversation
-//     "name": "Jane Doe"                     // optional, names a newly-created contact
+//     "name": "Jane Doe",                    // optional, names a newly-created contact
+//     "ai_generated": true                   // optional (default true): marks the reply as AI-sent
 //   }
 //
 // Response (201):
@@ -58,7 +59,31 @@ export async function POST(request: Request) {
       return fail('bad_request', "'to' is required", 400);
     }
 
-    const type = typeof body.type === 'string' ? body.type : 'text';
+    // `content_type` / `content_text` are accepted as aliases for `type` /
+    // `text` (they match the field names in message responses, so
+    // integrations naturally reach for them).
+    const type =
+      typeof body.type === 'string'
+        ? body.type
+        : typeof body.content_type === 'string'
+          ? body.content_type
+          : 'text';
+    const text =
+      typeof body.text === 'string'
+        ? body.text
+        : typeof body.content_text === 'string'
+          ? body.content_text
+          : null;
+
+    // Checked here rather than left to the shared validator so the error
+    // names the public field, not the internal `content_text`.
+    if (type === 'text' && !text?.trim()) {
+      return fail(
+        'bad_request',
+        "'text' is required for text messages (alias: 'content_text')",
+        400
+      );
+    }
 
     // Unpack the optional `template` object into the flat params the
     // send core expects. `params` as an array → legacy positional body
@@ -89,7 +114,7 @@ export async function POST(request: Request) {
 
     validateSendMessageParams({
       messageType: type,
-      contentText: typeof body.text === 'string' ? body.text : null,
+      contentText: text,
       mediaUrl: typeof body.media_url === 'string' ? body.media_url : null,
       templateName: typeof template?.name === 'string' ? template.name : null,
       interactivePayload,
@@ -111,7 +136,7 @@ export async function POST(request: Request) {
       {
         conversationId: resolved.conversationId,
         messageType: type,
-        contentText: typeof body.text === 'string' ? body.text : null,
+        contentText: text,
         mediaUrl: typeof body.media_url === 'string' ? body.media_url : null,
         filename: typeof body.filename === 'string' ? body.filename : null,
         templateName: typeof template?.name === 'string' ? template.name : null,
@@ -124,6 +149,8 @@ export async function POST(request: Request) {
           typeof body.reply_to_message_id === 'string'
             ? body.reply_to_message_id
             : null,
+        // API sends are the AI agent (n8n) unless the caller opts out.
+        aiGenerated: body.ai_generated !== false,
       }
     );
 

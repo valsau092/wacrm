@@ -48,6 +48,7 @@ it. Grant the minimum.
 | `contacts:read`      | List and read contacts                   |
 | `contacts:write`     | Create and update contacts               |
 | `conversations:read` | List and read conversations              |
+| `conversations:write`| Update conversations (pause / resume AI) |
 | `broadcasts:send`    | Launch broadcast campaigns               |
 | `webhooks:manage`    | Register and manage outbound webhooks    |
 | `ai_config:read`     | Read the AI assistant config + knowledge base |
@@ -132,7 +133,8 @@ curl -X POST https://your-crm.example.com/api/v1/messages \
 `type` is `text` (default), `template`, or a media kind (`image` /
 `video` / `document` / `audio`). Media needs `media_url` (and optional
 `filename`); `text` doubles as the caption. `template` needs a
-`template` object:
+`template` object. `content_type` / `content_text` are accepted as
+aliases for `type` / `text`.
 
 ```jsonc
 {
@@ -210,7 +212,20 @@ and `?contact_id=`. Each conversation embeds its contact + tags.
 ### `GET /api/v1/conversations/{id}`
 
 Read one conversation. Scope: `conversations:read`. `404` if it belongs
-to another account.
+to another account. `ai_paused` is `true` when AI replies are paused on
+this conversation (toggled from the inbox header, or via `PATCH` below).
+
+### `PATCH /api/v1/conversations/{id}`
+
+Pause or resume AI replies on one conversation. Scope:
+`conversations:write`. Returns the updated conversation.
+
+```bash
+curl -X PATCH https://your-crm.example.com/api/v1/conversations/<id> \
+  -H "Authorization: Bearer wacrm_live_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{ "ai_paused": true }'
+```
 
 ### `GET /api/v1/conversations/{id}/messages`
 
@@ -219,6 +234,30 @@ Paginated. Each message includes its `direction` (`inbound` /
 `outbound`), `status` (delivery state), `whatsapp_message_id`, and
 `content_*`. The conversation is verified to belong to your account
 first (`404` otherwise).
+
+Outbound messages carry `sent_by_type` (`null` on inbound):
+`ai` (sent through `POST /api/v1/messages`, or by the built-in AI bot),
+`agent` (a human from the inbox; `sent_by_agent_id` is their user id),
+`automation` (Flows / automations / broadcasts), or `unknown` (agent
+sends stored before attribution existed). `POST /api/v1/messages` marks
+its sends as `ai` unless the body has `"ai_generated": false`.
+Media messages also carry `media` (`media_id`, `mime_type`, `caption`;
+`filename` / `sha256` are only on the webhook), else `null`.
+
+### `GET /api/v1/media/{media_id}`
+
+Download an inbound media file. Scope: `messages:read`. `media_id` is
+Meta's id from `data.media.media_id` on `message.received` (or `media`
+on a message). wacrm fetches it from Meta with the account's stored
+token and streams the bytes back with the right `Content-Type` — you
+never need a Meta token. `404` for a malformed id or one that isn't an
+inbound message in your account; `502 media_unavailable` if Meta no
+longer has it and no mirrored copy exists.
+
+```bash
+curl https://your-crm.example.com/api/v1/media/2003382583705808 \
+  -H "Authorization: Bearer wacrm_live_xxx" -o file
+```
 
 ### `POST /api/v1/broadcasts`
 
@@ -369,6 +408,10 @@ delivery uuid you can dedupe on, and `data` varies by `event`:
 ```jsonc
 // message.received
 { "conversation_id": "…", "contact_id": "…", "whatsapp_message_id": "wamid.…", "content_type": "text", "text": "Hi 👋" }
+// message.received — media (image / audio / video / document / sticker;
+// stickers arrive as content_type "image"). `text` is the caption, if any.
+{ "conversation_id": "…", "contact_id": "…", "whatsapp_message_id": "wamid.…", "content_type": "image", "text": null,
+  "media": { "media_id": "2003382583705808", "mime_type": "image/jpeg", "caption": null, "filename": null, "sha256": "…" } }
 // conversation.created
 { "conversation_id": "…", "contact_id": "…" }
 // message.status_updated

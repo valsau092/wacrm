@@ -88,6 +88,14 @@ export interface SendMessageParams {
   /** Structured payload for `messageType === 'interactive'`. */
   interactivePayload?: InteractiveMessagePayload | null;
   replyToMessageId?: string | null;
+  /**
+   * Who is sending, persisted for attribution: `senderId` is the
+   * logged-in agent (`messages.sender_id`) on dashboard sends;
+   * `aiGenerated` marks a reply an AI produced (`messages.ai_generated`),
+   * which public-API sends default to.
+   */
+  senderId?: string | null;
+  aiGenerated?: boolean;
 }
 
 export interface SendMessageResult {
@@ -201,6 +209,8 @@ export async function sendMessageToConversation(
     templateMessageParams,
     interactivePayload,
     replyToMessageId,
+    senderId,
+    aiGenerated,
   } = params;
 
   if (!conversationId) {
@@ -473,6 +483,8 @@ export async function sendMessageToConversation(
     .insert({
       conversation_id: conversationId,
       sender_type: 'agent',
+      sender_id: senderId || null,
+      ai_generated: aiGenerated ?? false,
       content_type: messageType,
       content_text: persistedText,
       media_url: mediaUrl || null,
