@@ -1,3 +1,4 @@
+import { aiDraftDisabledResponse } from '@/lib/features-server'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
@@ -21,6 +22,8 @@ import { AiError } from '@/lib/ai/types'
  * sends or stores anything, just hands text back to the composer.
  */
 export async function POST(request: Request) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId, userId } = await requireRole('agent')
 

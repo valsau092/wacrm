@@ -1,3 +1,4 @@
+import { aiDraftDisabledResponse } from '@/lib/features-server'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
@@ -12,6 +13,8 @@ type Params = { params: Promise<{ id: string }> }
  * GET /api/ai/knowledge and GET /api/ai/config).
  */
 export async function GET(_request: Request, { params }: Params) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId } = await requireRole('agent')
     const { id } = await params
@@ -37,6 +40,8 @@ export async function GET(_request: Request, { params }: Params) {
  * re-index when the content changed.
  */
 export async function PATCH(request: Request, { params }: Params) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId, userId } = await requireRole('admin')
     const limit = checkRateLimit(`ai-kb:${userId}`, RATE_LIMITS.adminAction)
@@ -110,6 +115,8 @@ export async function PATCH(request: Request, { params }: Params) {
  * DELETE /api/ai/knowledge/[id]  (admin+) — chunks cascade.
  */
 export async function DELETE(_request: Request, { params }: Params) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId } = await requireRole('admin')
     const { id } = await params

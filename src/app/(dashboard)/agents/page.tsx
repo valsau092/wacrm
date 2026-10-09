@@ -9,10 +9,19 @@ import { AiUsageCard } from '@/components/agents/ai-usage';
 import { AiConfig } from '@/components/settings/ai-config';
 import { useAuth } from '@/hooks/use-auth';
 import { canEditSettings } from '@/lib/auth/roles';
+import { notFound } from 'next/navigation';
+import { AI_DRAFT_ENABLED } from '@/lib/features';
 
 type Tab = 'playground' | 'setup' | 'usage';
 
+// The whole page is the bring-your-own-key AI assistant setup, hidden
+// behind the platform flag (off by default) so tenants can't load keys.
 export default function AgentsPage() {
+  if (!AI_DRAFT_ENABLED) notFound();
+  return <AgentsPageContent />;
+}
+
+function AgentsPageContent() {
   const t = useTranslations('Agents.page');
   const { accountRole } = useAuth();
   const canViewUsage = accountRole ? canEditSettings(accountRole) : false;

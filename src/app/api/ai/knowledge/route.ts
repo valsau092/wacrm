@@ -1,3 +1,4 @@
+import { aiDraftDisabledResponse } from '@/lib/features-server'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
@@ -13,6 +14,8 @@ import { AiError } from '@/lib/ai/types'
  * read this either).
  */
 export async function GET() {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId } = await requireRole('agent')
     const { data, error } = await supabase
@@ -40,6 +43,8 @@ export async function GET() {
  * fails the document is still saved so the admin can retry via reindex.
  */
 export async function POST(request: Request) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId, userId } = await requireRole('admin')
     const limit = checkRateLimit(`ai-kb:${userId}`, RATE_LIMITS.adminAction)

@@ -1,3 +1,4 @@
+import { aiDraftDisabledResponse } from '@/lib/features-server'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { daysAgoStart, lastNDayKeys, localDayKey } from '@/lib/dashboard/date-utils'
@@ -29,6 +30,8 @@ interface UsageRow {
  * `ai_usage_log` SELECT policy — spend is billing-class.
  */
 export async function GET(request: Request) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId } = await requireRole('admin')
 

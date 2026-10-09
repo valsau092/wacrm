@@ -1,3 +1,4 @@
+import { aiDraftDisabledResponse } from '@/lib/features-server'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
@@ -15,6 +16,8 @@ import { AiError, type AiProvider } from '@/lib/ai/types'
  * provider's message on failure.
  */
 export async function POST(request: Request) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId, userId } = await requireRole('admin')
 

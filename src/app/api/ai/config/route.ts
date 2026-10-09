@@ -1,3 +1,4 @@
+import { aiDraftDisabledResponse } from '@/lib/features-server'
 import { NextResponse } from 'next/server'
 import { requireRole, toErrorResponse } from '@/lib/auth/account'
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/lib/rate-limit'
@@ -65,6 +66,8 @@ export async function GET() {
  * when the user re-enters it).
  */
 export async function POST(request: Request) {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId, userId } = await requireRole('admin')
 
@@ -253,6 +256,8 @@ export async function POST(request: Request) {
  * key). Also used to recover from a corrupted encrypted key.
  */
 export async function DELETE() {
+  const disabled = aiDraftDisabledResponse()
+  if (disabled) return disabled
   try {
     const { supabase, accountId } = await requireRole('admin')
     const { error } = await supabase
