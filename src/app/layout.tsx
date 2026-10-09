@@ -4,6 +4,7 @@ import { getLocale, getMessages } from 'next-intl/server';
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { BRAND_NAME, BRAND_DESCRIPTION } from "@/lib/brand";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ThemedToaster } from "@/components/themed-toaster";
 import {
@@ -20,18 +21,38 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
 export const metadata: Metadata = {
+  // Necesario para que las imágenes de las vistas previas (Open Graph)
+  // se resuelvan con la URL pública del sitio.
+  ...(SITE_URL ? { metadataBase: new URL(SITE_URL) } : {}),
   title: {
-    default: "wacrm",
-    template: "%s — wacrm",
+    default: BRAND_NAME,
+    template: `%s — ${BRAND_NAME}`,
   },
-  description: "Self-hostable CRM template for WhatsApp.",
+  description: BRAND_DESCRIPTION,
+  applicationName: BRAND_NAME,
   robots: {
     index: false,
     follow: false,
   },
-  icons: {
-    icon: [{ url: "/icon" }],
+  // El favicon y el ícono de Apple salen de src/app/icon.png y
+  // src/app/apple-icon.png (convención de archivos de Next.js).
+  openGraph: {
+    type: "website",
+    siteName: BRAND_NAME,
+    title: BRAND_NAME,
+    description: BRAND_DESCRIPTION,
+    images: [
+      { url: "/brand/logo-512.png", width: 512, height: 512, alt: BRAND_NAME },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: BRAND_NAME,
+    description: BRAND_DESCRIPTION,
+    images: ["/brand/logo-512.png"],
   },
   formatDetection: {
     email: false,
