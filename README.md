@@ -139,6 +139,57 @@ Full walkthrough with screenshots:
 > (Vercel, Railway, your own VPS). Hostinger is recommended, not
 > required._
 
+## Production deploy on this VPS (VASA)
+
+This fork's `crm.vasamkt.com` runs on our own VPS, not Hostinger —
+Caddy reverse-proxies to a Next.js **standalone** build
+(`output: "standalone"` in `next.config.ts`) kept alive by a systemd
+service named **`wacrm`**.
+
+**To ship a code change to production:**
+
+```bash
+npm run deploy
+```
+
+That's the whole flow — don't run the steps by hand. `output:
+"standalone"` trims its own `node_modules` into `.next/standalone`,
+but a fresh build does **not** carry over the static assets or
+`.env.local` into that folder; missing either silently leaves the
+service running last build's static files or last deploy's env vars
+(no error, just wrong behavior — the `.env.local` case is the
+dangerous one, since it also happens without an error). `npm run
+deploy` (`scripts/deploy.sh`) does all of it in order and stops at the
+first failure (`set -euo pipefail`):
+
+1. `next build`
+2. copy `.next/static` → `.next/standalone/.next/static`
+3. copy `public/` → `.next/standalone/public`
+4. copy `.env.local` → `.next/standalone/.env.local`
+5. `systemctl restart wacrm`
+
+**Useful commands:**
+
+```bash
+systemctl status wacrm     # is it up, since when, recent log lines
+journalctl -u wacrm -f     # follow logs live
+systemctl restart wacrm    # relaunch WITHOUT rebuilding — only useful
+                            # if the code hasn't changed (e.g. after
+                            # editing .env.local by hand and copying it
+                            # over yourself)
+```
+
+The service is `enabled` (`systemctl enable wacrm`), so it also comes
+back on its own if the whole VPS reboots — and `Restart=always` means
+systemd relaunches it if the process ever dies on its own. Unit file:
+`/etc/systemd/system/wacrm.service` (not part of this repo — VPS-only
+config).
+
+**Known gap, not yet fixed**: the service currently runs as `root`
+(everything on this VPS does today — no dedicated app user exists
+yet). Running it under an unprivileged user is a pending security
+improvement, tracked separately from this deploy flow.
+
 ## Documentation
 
 Full self-host documentation — Supabase migrations, WhatsApp Business
