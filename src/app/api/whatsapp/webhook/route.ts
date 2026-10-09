@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption'
 import { getMediaUrl, downloadMedia } from '@/lib/whatsapp/meta-api'
 import { mirrorInboundMedia } from '@/lib/whatsapp/mirror-inbound-media'
+import { inboundMediaPayload } from '@/lib/api/v1/media'
 import { normalizePhone } from '@/lib/whatsapp/phone-utils'
 import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe'
 import { reopenClosedConversation } from '@/lib/conversations/reopen'
@@ -41,11 +42,11 @@ interface WhatsAppMessage {
   timestamp: string
   type: string
   text?: { body: string }
-  image?: { id: string; mime_type: string; caption?: string }
-  video?: { id: string; mime_type: string; caption?: string }
-  document?: { id: string; mime_type: string; filename?: string; caption?: string }
-  audio?: { id: string; mime_type: string }
-  sticker?: { id: string; mime_type: string }
+  image?: { id: string; mime_type: string; sha256?: string; caption?: string }
+  video?: { id: string; mime_type: string; sha256?: string; caption?: string }
+  document?: { id: string; mime_type: string; sha256?: string; filename?: string; caption?: string }
+  audio?: { id: string; mime_type: string; sha256?: string }
+  sticker?: { id: string; mime_type: string; sha256?: string }
   location?: { latitude: number; longitude: number; name?: string; address?: string }
   reaction?: { message_id: string; emoji: string }
   /**
@@ -887,12 +888,19 @@ async function processMessage(
   // when the account has no matching endpoint and never throws.
   // (conversation.created is emitted earlier, right after the thread is
   // opened.)
+  const inboundMedia = inboundMediaPayload(
+    message as unknown as { type: string; [kind: string]: unknown }
+  )
   await dispatchWebhookEvent(supabaseAdmin(), accountId, 'message.received', {
     conversation_id: conversation.id,
     contact_id: contactRecord.id,
     whatsapp_message_id: message.id,
     content_type: contentType,
     text: contentText,
+    // Media messages only: Meta's media id (fetch the bytes through
+    // GET /api/v1/media/{media_id}) plus mime / caption / filename /
+    // sha256 as Meta sent them. Absent on non-media messages.
+    ...(inboundMedia ? { media: inboundMedia } : {}),
   })
 }
 

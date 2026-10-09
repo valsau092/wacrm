@@ -1055,3 +1055,29 @@ export async function downloadMedia(
   const buffer = Buffer.from(await response.arrayBuffer())
   return { buffer, contentType }
 }
+
+/**
+ * Like `downloadMedia`, but hands back the unconsumed response body so
+ * a route can stream it to its caller instead of buffering the whole
+ * file. Throws on a non-2xx (message carries the status, never the
+ * token).
+ */
+export async function streamMedia(args: DownloadMediaArgs): Promise<{
+  body: ReadableStream<Uint8Array>
+  contentType: string
+  contentLength: string | null
+}> {
+  const { downloadUrl, accessToken } = args
+  const response = await fetch(downloadUrl, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok || !response.body) {
+    throw new Error(`Media download failed: ${response.status}`)
+  }
+  return {
+    body: response.body,
+    contentType:
+      response.headers.get('content-type') || 'application/octet-stream',
+    contentLength: response.headers.get('content-length'),
+  }
+}
