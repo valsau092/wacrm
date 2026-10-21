@@ -24,17 +24,39 @@ export interface MetaPhoneInfo {
 }
 
 interface MetaErrorResponse {
-  error?: { message?: string; code?: number; type?: string }
+  error?: {
+    message?: string
+    code?: number
+    type?: string
+    error_subcode?: number
+    error_user_title?: string
+    error_user_msg?: string
+  }
 }
 
 async function throwMetaError(response: Response, fallback: string): Promise<never> {
   let message = fallback
   try {
     const data = (await response.json()) as MetaErrorResponse
-    if (data.error?.message) message = data.error.message
+    const err = data.error
+    if (err?.message) message = err.message
+    // `message` alone is often generic ("Invalid parameter"); the
+    // actionable detail lives in code/subcode and error_user_*. Only
+    // fields from Meta's error body are used — never the request.
+    const codes = [
+      err?.code !== undefined ? `code=${err.code}` : '',
+      err?.error_subcode !== undefined ? `subcode=${err.error_subcode}` : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+    const userDetail = [err?.error_user_title, err?.error_user_msg]
+      .filter(Boolean)
+      .join(': ')
+    message = [message, codes, userDetail].filter(Boolean).join(' | ')
   } catch {
     // response body wasn't JSON — keep the fallback
   }
+  console.error(`[meta-api] HTTP ${response.status}: ${message}`)
   throw new Error(message)
 }
 
